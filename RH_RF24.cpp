@@ -61,41 +61,33 @@ bool RH_RF24::init()
 
     // Initialise the radio
     power_on_reset();
-    cmd_clear_all_interrupts();
 
-    uint8_t buf[8];
-    uint8_t args[] = {//BOOT_OPTIONS:
-    				  128 | // NO_PATCH
-    				  1,     //PRO functional mode
+    uint8_t reply = 0;
+    do {
+    	digitalWrite(_slaveSelectPin, LOW);
+    	_spi.transfer(RH_RF24_CMD_READ_BUF);
+    	reply = _spi.transfer(0);
+    	digitalWrite(_slaveSelectPin, HIGH);
+    } while (reply != RH_RF24_REPLY_CTS);
 
-					  //XTAL_OPTIONS:
-					  0, // XTAL: internal crystal is used
+    //cmd_clear_all_interrupts();
 
-					  //XO_FREQ (30MHz):
-					  0x01,
-					  0xC9,
-					  0xC3,
-					  0x80
-    				 };
+    uint8_t args[] = {0x01,0x00};
 
-    command(RH_RF24_CMD_POWER_UP, args, sizeof(args), buf, sizeof(buf));
+    command(RH_RF24_CMD_POWER_UP, args, sizeof(args));
 
     delay(1000);
 
     // Get the device type and check it
     // This also tests whether we are really connected to a device
+    uint8_t buf[8];
     if (!command(RH_RF24_CMD_PART_INFO, 0, 0, buf, sizeof(buf))) {
     	Serial.println("could not send SPI command");
     	return false; // SPI error? Not connected?
     }
 
-    Serial.println("[");
-    Serial.println(buf[1]);
-    Serial.println(buf[2]);
-    Serial.println("]");
-
     _deviceType = (buf[1] << 8) | buf[2];
-    //Serial.println(_deviceType);
+    Serial.println(_deviceType);
     // Check PART to be either 0x4460, 0x4461, 0x4463, 0x4464
     if (_deviceType != 0x4460 &&
 	_deviceType != 0x4461 &&
