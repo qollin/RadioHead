@@ -62,6 +62,7 @@ bool RH_RF24::init()
     // Initialise the radio
     power_on_reset();
 
+    /*
     uint8_t reply = 0;
     do {
     	digitalWrite(_slaveSelectPin, LOW);
@@ -69,8 +70,9 @@ bool RH_RF24::init()
     	reply = _spi.transfer(0);
     	digitalWrite(_slaveSelectPin, HIGH);
     } while (reply != RH_RF24_REPLY_CTS);
+	*/
 
-    //cmd_clear_all_interrupts();
+    cmd_clear_all_interrupts();
 
     uint8_t args[] = {0x01,0x00};
 
@@ -87,7 +89,9 @@ bool RH_RF24::init()
     }
 
     _deviceType = (buf[1] << 8) | buf[2];
-    Serial.println(_deviceType);
+    Serial.println(_deviceType, HEX);
+    Serial.println(buf[0]);
+    Serial.println(buf[0], HEX);
     // Check PART to be either 0x4460, 0x4461, 0x4463, 0x4464
     if (_deviceType != 0x4460 &&
 	_deviceType != 0x4461 &&
